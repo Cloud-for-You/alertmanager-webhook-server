@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.0.1...v1.1.0) (2025-02-24)
+
+
+### Features
+
+* pridani metrics ([8d45f76](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/8d45f76168865f53bba61194e0fc21a4c1c11734))
+* pridani metrics ([5fafb3a](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/5fafb3a470ab1142b278e0fb998e8fad1b1e3e52))
+
 ## [1.0.1](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.0.0...v1.0.1) (2025-02-24)
 
 
