@@ -16,6 +16,7 @@ type KafkaConfig struct {
     ClientKeyPath   string `json:"clientKeyPath"`
     CACertPath      string `json:"caCertPath"`
     KafkaBrokerURL  string `json:"kafkaBrokerURL"`
+    KafkaTopic      string `json:"kafkaTopic"`
 }
 
 func InitKafka(config KafkaConfig) {
@@ -42,7 +43,7 @@ func InitKafka(config KafkaConfig) {
     // Kafka Writer
     Writer = &kafka.Writer{
         Addr:     kafka.TCP(config.KafkaBrokerURL),
-        Topic:    "alerts",
+        Topic:    config.KafkaTopic,
         Balancer: &kafka.LeastBytes{},
         Transport: &kafka.Transport{
             TLS: tlsConfig,

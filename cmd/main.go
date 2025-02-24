@@ -72,6 +72,7 @@ func main() {
         ClientKeyPath:  os.Getenv("KAFKA_CLIENT_KEY"),
         CACertPath:     os.Getenv("KAFKA_CA_CERT"),
         KafkaBrokerURL: os.Getenv("KAFKA_BROKER_URL"),
+        KafkaTopic:     os.Getenv("KAFKA_TOPIC"),
     }
 
     receiver.InitKafka(config)
