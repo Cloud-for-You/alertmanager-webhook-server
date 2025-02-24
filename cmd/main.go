@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/segmentio/kafka-go"
 
 	receiver "github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/kafka"
 )
@@ -61,49 +60,42 @@ func debugLog(data []byte) {
 }
 
 func alertHandler(w http.ResponseWriter, r *http.Request) {
-	// Parsování JSON alertu do struktury Alertmanageru
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Chyba při čtení requestu", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close() // Ensure the body is closed after reading
+    // Parsování JSON alertu do struktury Alertmanageru
+    body, err := io.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Chyba při čtení requestu", http.StatusBadRequest)
+        return
+    }
+    defer r.Body.Close() // Ensure the body is closed after reading
 
-	debugLog(body)
-	receivedMessages.Inc()
+    debugLog(body)
+    receivedMessages.Inc()
 
-	var alertData template.Data
+    var alertData template.Data
 
-	err = json.Unmarshal(body, &alertData)
-	if err != nil {
-		http.Error(w, "Chyba při parsování JSON", http.StatusBadRequest)
-		return
-	}
+    err = json.Unmarshal(body, &alertData)
+    if err != nil {
+        http.Error(w, "Chyba při parsování JSON", http.StatusBadRequest)
+        return
+    }
 
-	// Odeslání do Kafka topicu
-	for _, alert := range alertData.Alerts {
-		message := fmt.Sprintf("Alert: %s, Status: %s", alert.Labels["alertname"], alert.Status)
-		start := time.Now()
-		writer := &kafka.Writer{
-			Addr:     kafka.TCP(os.Getenv("KAFKA_BROKER_URL")),
-			Topic:    os.Getenv("KAFKA_TOPIC"),
-			Balancer: &kafka.LeastBytes{},
-		}
-		err = writer.WriteMessages(r.Context(), kafka.Message{
-			Value: []byte(message),
-		})
-		duration := time.Since(start).Seconds()
-		if err != nil {
-			sentMessages.WithLabelValues("error").Inc()
-			messageSendDuration.WithLabelValues("error").Observe(duration)
-			http.Error(w, "Chyba při odesílání do Kafka", http.StatusInternalServerError)
-			return
-		}
-		sentMessages.WithLabelValues("success").Inc()
-		messageSendDuration.WithLabelValues("success").Observe(duration)
-	}
+    // Odeslání do Kafka topicu
+    for _, alert := range alertData.Alerts {
+        message := fmt.Sprintf("Alert: %s, Status: %s", alert.Labels["alertname"], alert.Status)
+        start := time.Now()
+        err = receiver.SendMessage(r.Context(), message)
+        duration := time.Since(start).Seconds()
+        if err != nil {
+            sentMessages.WithLabelValues("error").Inc()
+            messageSendDuration.WithLabelValues("error").Observe(duration)
+            http.Error(w, "Chyba při odesílání do Kafka", http.StatusInternalServerError)
+            return
+        }
+        sentMessages.WithLabelValues("success").Inc()
+        messageSendDuration.WithLabelValues("success").Observe(duration)
+    }
 
-	w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusOK)
 }
 
 func main() {

@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"log"
@@ -49,4 +50,11 @@ func InitKafka(config KafkaConfig) {
             TLS: tlsConfig,
         },
     }
+}
+
+func SendMessage(ctx context.Context, message string) error {
+    err := Writer.WriteMessages(ctx, kafka.Message{
+        Value: []byte(message),
+    })
+    return err
 }
