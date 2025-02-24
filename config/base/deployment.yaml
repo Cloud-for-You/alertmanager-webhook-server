@@ -14,10 +14,16 @@ spec:
     spec:
       containers:
       - name: alertmanager-webhook-server
-        image: your-docker-image
+        image: quay.io/cloud-for-you/alertmanager-webhook-server:latest
+        ports:
+        - containerPort: 8080
         env:
+        - name: DEBUG
+          value: "false"
         - name: KAFKA_BROKER_URL
           value: "your-kafka-broker-url"
+        - name: KAFKA_TOPIC
+          value: "topic-name"
         - name: KAFKA_CLIENT_CERT
           value: "/etc/kafka/certs/client.crt"
         - name: KAFKA_CLIENT_KEY
