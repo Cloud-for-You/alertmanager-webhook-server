@@ -25,9 +25,9 @@ spec:
         - name: KAFKA_TOPIC
           value: "topic-name"
         - name: KAFKA_CLIENT_CERT
-          value: "/etc/kafka/certs/client.crt"
+          value: "/etc/kafka/certs/tls.crt"
         - name: KAFKA_CLIENT_KEY
-          value: "/etc/kafka/certs/client.key"
+          value: "/etc/kafka/certs/tls.key"
         - name: KAFKA_CA_CERT
           value: "/etc/kafka/certs/ca.crt"
         resources:
