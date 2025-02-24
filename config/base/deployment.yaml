@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-webhook-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager-webhook-server
+  template:
+    metadata:
+      labels:
+        app: alertmanager-webhook-server
+    spec:
+      containers:
+      - name: alertmanager-webhook-server
+        image: your-docker-image
+        env:
+        - name: KAFKA_BROKER_URL
+          value: "your-kafka-broker-url"
+        - name: KAFKA_CLIENT_CERT
+          value: "/etc/kafka/certs/client.crt"
+        - name: KAFKA_CLIENT_KEY
+          value: "/etc/kafka/certs/client.key"
+        - name: KAFKA_CA_CERT
+          value: "/etc/kafka/certs/ca.crt"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+        - name: kafka-certificates
+          mountPath: /etc/kafka/certs
+          readOnly: true
+      volumes:
+      - name: kafka-certificates
+        secret:
+          secretName: kafka-certificates
