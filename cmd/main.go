@@ -7,77 +7,118 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/prometheus/alertmanager/template"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/segmentio/kafka-go"
 
 	receiver "github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/kafka"
-	"github.com/prometheus/alertmanager/template"
-	"github.com/segmentio/kafka-go"
 )
 
-var debug bool
+var (
+	debug bool
+
+	receivedMessages = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "received_messages_total",
+			Help: "Celkový počet přijatých zpráv",
+		},
+	)
+
+	sentMessages = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "sent_messages_total",
+			Help: "Celkový počet odeslaných zpráv",
+		},
+		[]string{"status"},
+	)
+
+	messageSendDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "message_send_duration_seconds",
+			Help:    "Doba trvání odesílání zpráv v sekundách",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"status"},
+	)
+)
 
 func init() {
-    debug = os.Getenv("DEBUG") == "true"
+	debug = os.Getenv("DEBUG") == "true"
+
+	// Registrace metrik
+	prometheus.MustRegister(receivedMessages)
+	prometheus.MustRegister(sentMessages)
+	prometheus.MustRegister(messageSendDuration)
 }
 
 func debugLog(data []byte) {
-    if debug {
-        log.Printf("Přijatý webhook: %s", string(data))
-    }
+	if debug {
+		log.Printf("Přijatý webhook: %s", string(data))
+	}
 }
 
 func alertHandler(w http.ResponseWriter, r *http.Request) {
-    // Parsování JSON alertu do struktury Alertmanageru
-    body, err := io.ReadAll(r.Body)
-    if err != nil {
-        http.Error(w, "Chyba při čtení requestu", http.StatusBadRequest)
-        return
-    }
-    defer r.Body.Close() // Ensure the body is closed after reading
+	// Parsování JSON alertu do struktury Alertmanageru
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Chyba při čtení requestu", http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close() // Ensure the body is closed after reading
 
-    debugLog(body)
+	debugLog(body)
+	receivedMessages.Inc()
 
-    var alertData template.Data
+	var alertData template.Data
 
-    err = json.Unmarshal(body, &alertData)
-    if err != nil {
-        http.Error(w, "Chyba při parsování JSON", http.StatusBadRequest)
-        return
-    }
+	err = json.Unmarshal(body, &alertData)
+	if err != nil {
+		http.Error(w, "Chyba při parsování JSON", http.StatusBadRequest)
+		return
+	}
 
-    // Odeslání do Kafka topicu
-    writer := &kafka.Writer{
-        Addr:     kafka.TCP(os.Getenv("KAFKA_BROKER_URL")),
-        Topic:    "alerts",
-        Balancer: &kafka.LeastBytes{},
-    }
-    defer writer.Close()
+	// Odeslání do Kafka topicu
+	for _, alert := range alertData.Alerts {
+		message := fmt.Sprintf("Alert: %s, Status: %s", alert.Labels["alertname"], alert.Status)
+		start := time.Now()
+		writer := &kafka.Writer{
+			Addr:     kafka.TCP(os.Getenv("KAFKA_BROKER_URL")),
+			Topic:    os.Getenv("KAFKA_TOPIC"),
+			Balancer: &kafka.LeastBytes{},
+		}
+		err = writer.WriteMessages(r.Context(), kafka.Message{
+			Value: []byte(message),
+		})
+		duration := time.Since(start).Seconds()
+		if err != nil {
+			sentMessages.WithLabelValues("error").Inc()
+			messageSendDuration.WithLabelValues("error").Observe(duration)
+			http.Error(w, "Chyba při odesílání do Kafka", http.StatusInternalServerError)
+			return
+		}
+		sentMessages.WithLabelValues("success").Inc()
+		messageSendDuration.WithLabelValues("success").Observe(duration)
+	}
 
-    for _, alert := range alertData.Alerts {
-        message := fmt.Sprintf("Alert: %s, Status: %s", alert.Labels["alertname"], alert.Status)
-        err = writer.WriteMessages(r.Context(), kafka.Message{
-            Value: []byte(message),
-        })
-        if err != nil {
-            http.Error(w, "Chyba při odesílání do Kafka", http.StatusInternalServerError)
-            return
-        }
-    }
-
-    w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
-    config := receiver.KafkaConfig{
-        ClientCertPath: os.Getenv("KAFKA_CLIENT_CERT"),
-        ClientKeyPath:  os.Getenv("KAFKA_CLIENT_KEY"),
-        CACertPath:     os.Getenv("KAFKA_CA_CERT"),
-        KafkaBrokerURL: os.Getenv("KAFKA_BROKER_URL"),
-        KafkaTopic:     os.Getenv("KAFKA_TOPIC"),
-    }
+	config := receiver.KafkaConfig{
+		ClientCertPath: os.Getenv("KAFKA_CLIENT_CERT"),
+		ClientKeyPath:  os.Getenv("KAFKA_CLIENT_KEY"),
+		CACertPath:     os.Getenv("KAFKA_CA_CERT"),
+		KafkaBrokerURL: os.Getenv("KAFKA_BROKER_URL"),
+		KafkaTopic:     os.Getenv("KAFKA_TOPIC"),
+	}
 
-    receiver.InitKafka(config)
+	receiver.InitKafka(config)
 
-    http.HandleFunc("/", alertHandler)
-    log.Println("Start webserver on port 8080")
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	http.HandleFunc("/", alertHandler)
+	http.Handle("/metrics", promhttp.Handler())
+	log.Println("Start webserver on port 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
