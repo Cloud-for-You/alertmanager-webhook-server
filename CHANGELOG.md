@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.2.0...v1.2.1) (2025-02-25)
+
+
+### Bug Fixes
+
+* Prejmenovani odesilani messages a lehka uprava autorizace k topicu ([0f94e5a](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/0f94e5a2527293f44155cdc42b578f8a5b9c235f))
+
 ## [1.2.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.1.0...v1.2.0) (2025-02-25)
 
 
