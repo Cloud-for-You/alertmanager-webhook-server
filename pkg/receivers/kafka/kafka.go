@@ -48,6 +48,9 @@ func NewKAFKAReceiver() *KAFKAReceiver {
 	config.Net.TLS.Enable = true
 	config.Net.TLS.Config = tlsConfig
 	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
+	config.Metadata.Retry.Max = 5
 
 	// Create producer
 	producer, err := sarama.NewSyncProducer([]string{brokerURL}, config)
@@ -67,12 +70,12 @@ func (r *KAFKAReceiver) SendMessage(data []byte) error {
 		Value: sarama.ByteEncoder(data),
 	}
 
-	_, _, err := r.producer.SendMessage(msg)
+	partition, offset, err := r.producer.SendMessage(msg)
 	if err != nil {
 		logger.Log.Errorf("Failed to send message to Kafka: %v", err)
 		return err
 	}
 
-	logger.Log.Infof("Message sent to Kafka topic %s: %s", r.topic, string(data))
+	logger.Log.Infof("Message sent to Kafka topic %s: %s, partition: %d, offset: %d", r.topic, string(data), partition, offset)
 	return nil
 }
