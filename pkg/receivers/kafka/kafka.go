@@ -1,60 +1,78 @@
 package kafka
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"log"
 	"os"
 
-	"github.com/segmentio/kafka-go"
+	"github.com/IBM/sarama"
+	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 )
 
-var Writer *kafka.Writer
-
-type KafkaConfig struct {
-    ClientCertPath  string `json:"clientCertPath"`
-    ClientKeyPath   string `json:"clientKeyPath"`
-    CACertPath      string `json:"caCertPath"`
-    KafkaBrokerURL  string `json:"kafkaBrokerURL"`
-    KafkaTopic      string `json:"kafkaTopic"`
+type KAFKAReceiver struct {
+	producer sarama.SyncProducer
+	topic    string
 }
 
-func InitKafka(config KafkaConfig) {
-    // Načtení TLS certifikátů pro Kafka klienta
-    cert, err := tls.LoadX509KeyPair(config.ClientCertPath, config.ClientKeyPath)
-    if err != nil {
-        log.Fatalf("Chyba při načítání Kafka certifikátu: %v", err)
-    }
+func NewKAFKAReceiver() *KAFKAReceiver {
+	brokerURL := os.Getenv("KAFKA_BROKER_URL")
+	clientCertPath := os.Getenv("KAFKA_CLIENT_CERT")
+	clientKeyPath := os.Getenv("KAFKA_CLIENT_KEY")
+	caCertPath := os.Getenv("KAFKA_CA_CERT")
+	topic := os.Getenv("KAFKA_TOPIC")
 
-    caCert, err := os.ReadFile(config.CACertPath)
-    if err != nil {
-        log.Fatalf("Chyba při načítání Kafka CA certifikátu: %v", err)
-    }
+	// Load client cert
+	clientCert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+	if err != nil {
+		logger.Log.Fatalf("Failed to load client certificate: %v", err)
+	}
 
-    caCertPool := x509.NewCertPool()
-    caCertPool.AppendCertsFromPEM(caCert)
+	// Load CA cert
+	caCert, err := os.ReadFile(caCertPath)
+	if err != nil {
+		logger.Log.Fatalf("Failed to read CA certificate: %v", err)
+	}
 
-    // Kafka TLS konfigurace
-    tlsConfig := &tls.Config{
-        Certificates: []tls.Certificate{cert},
-        RootCAs:      caCertPool,
-    }
+	// Create cert pool
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
 
-    // Kafka Writer
-    Writer = &kafka.Writer{
-        Addr:     kafka.TCP(config.KafkaBrokerURL),
-        Topic:    config.KafkaTopic,
-        Balancer: &kafka.LeastBytes{},
-        Transport: &kafka.Transport{
-            TLS: tlsConfig,
-        },
-    }
+	// Create TLS config
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{clientCert},
+		RootCAs:      caCertPool,
+	}
+
+	// Configure Sarama
+	config := sarama.NewConfig()
+	config.Net.TLS.Enable = true
+	config.Net.TLS.Config = tlsConfig
+	config.Producer.Return.Successes = true
+
+	// Create producer
+	producer, err := sarama.NewSyncProducer([]string{brokerURL}, config)
+	if err != nil {
+		logger.Log.Fatalf("Failed to create Kafka producer: %v", err)
+	}
+
+	return &KAFKAReceiver{
+		producer: producer,
+		topic:    topic,
+	}
 }
 
-func SendMessage(ctx context.Context, message string) error {
-    err := Writer.WriteMessages(ctx, kafka.Message{
-        Value: []byte(message),
-    })
-    return err
+func (r *KAFKAReceiver) Producer(data []byte) error {
+	msg := &sarama.ProducerMessage{
+		Topic: r.topic,
+		Value: sarama.ByteEncoder(data),
+	}
+
+	_, _, err := r.producer.SendMessage(msg)
+	if err != nil {
+		logger.Log.Errorf("Failed to send message to Kafka: %v", err)
+		return err
+	}
+
+	logger.Log.Infof("Message sent to Kafka topic %s: %s", r.topic, string(data))
+	return nil
 }

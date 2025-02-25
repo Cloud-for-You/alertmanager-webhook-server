@@ -4,21 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	receiver "github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/kafka"
+	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
+	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers"
+	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/kafka"
+	stdout "github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/stdout"
 )
 
 var (
-	debug bool
-
 	receivedMessages = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "received_messages_total",
@@ -45,7 +44,8 @@ var (
 )
 
 func init() {
-	debug = os.Getenv("DEBUG") == "true"
+	logger.InitLogger()
+	defer logger.SyncLogger()
 
 	// Registrace metrik
 	prometheus.MustRegister(receivedMessages)
@@ -53,13 +53,18 @@ func init() {
 	prometheus.MustRegister(messageSendDuration)
 }
 
-func debugLog(data []byte) {
-	if debug {
-		log.Printf("Přijatý webhook: %s", string(data))
-	}
+func main() {
+	// Spuštění webserveru
+	http.HandleFunc("/", receiverHandler)
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	http.Handle("/metrics", promhttp.Handler())
+	logger.Log.Info("Server is running on address :8080")
+	logger.Log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func alertHandler(w http.ResponseWriter, r *http.Request) {
+func receiverHandler(w http.ResponseWriter, r *http.Request) {
     // Parsování JSON alertu do struktury Alertmanageru
     body, err := io.ReadAll(r.Body)
     if err != nil {
@@ -68,49 +73,35 @@ func alertHandler(w http.ResponseWriter, r *http.Request) {
     }
     defer r.Body.Close() // Ensure the body is closed after reading
 
-    debugLog(body)
     receivedMessages.Inc()
 
     var alertData template.Data
 
     err = json.Unmarshal(body, &alertData)
     if err != nil {
-        http.Error(w, "Chyba při parsování JSON", http.StatusBadRequest)
-        return
+			logger.Log.Error("Chyba při parsování JSON")
+      http.Error(w, "Chyba při parsování JSON", http.StatusBadRequest)
+      return
     }
 
-    // Odeslání do Kafka topicu
-    for _, alert := range alertData.Alerts {
-        message := fmt.Sprintf("Alert: %s, Status: %s", alert.Labels["alertname"], alert.Status)
-        start := time.Now()
-        err = receiver.SendMessage(r.Context(), message)
-        duration := time.Since(start).Seconds()
-        if err != nil {
-            sentMessages.WithLabelValues("error").Inc()
-            messageSendDuration.WithLabelValues("error").Observe(duration)
-            http.Error(w, "Chyba při odesílání do Kafka", http.StatusInternalServerError)
-            return
-        }
-        sentMessages.WithLabelValues("success").Inc()
-        messageSendDuration.WithLabelValues("success").Observe(duration)
+    // Odeslání dat do receiveru podle hodnoty v os.Env RECEIVER_TYPE
+		receiverType := os.Getenv("RECEIVER_TYPE")
+		var receiver receivers.Receiver
+		switch receiverType {
+    case "stdout":
+        receiver = stdout.NewSTDOUTReceiver()
+		case "kafka":
+				receiver = kafka.NewKAFKAReceiver()
+    default:
+	      receiver = stdout.NewSTDOUTReceiver()	
+    }
+
+		mainReceiver := receivers.NewMainReceiver(receiver)
+		// Simulace příjmu dat
+		err = mainReceiver.Receive(body)
+    if err != nil {
+        fmt.Println("Error:", err)
     }
 
     w.WriteHeader(http.StatusOK)
-}
-
-func main() {
-	config := receiver.KafkaConfig{
-		ClientCertPath: os.Getenv("KAFKA_CLIENT_CERT"),
-		ClientKeyPath:  os.Getenv("KAFKA_CLIENT_KEY"),
-		CACertPath:     os.Getenv("KAFKA_CA_CERT"),
-		KafkaBrokerURL: os.Getenv("KAFKA_BROKER_URL"),
-		KafkaTopic:     os.Getenv("KAFKA_TOPIC"),
-	}
-
-	receiver.InitKafka(config)
-
-	http.HandleFunc("/", alertHandler)
-	http.Handle("/metrics", promhttp.Handler())
-	log.Println("Start webserver on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
