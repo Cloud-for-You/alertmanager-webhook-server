@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.1.0...v1.2.0) (2025-02-25)
+
+
+### Features
+
+* Refactoring ([39ab701](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/39ab7018a59e43869f497ea247c3c6512b6eea54))
+
+
+### Bug Fixes
+
+* Add fnc SendMessage ([414bccf](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/414bccfb5700e243cd8f2cc1bfbaafc348b0a77d))
+
 ## [1.1.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.0.1...v1.1.0) (2025-02-24)
 
 
