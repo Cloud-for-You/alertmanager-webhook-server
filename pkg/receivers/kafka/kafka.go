@@ -4,14 +4,16 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"os"
+	"sync"
 
 	"github.com/IBM/sarama"
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 )
 
 type KafkaClient struct {
-	producer sarama.SyncProducer
+	producer sarama.AsyncProducer
 	topic    string
+	wg			 sync.WaitGroup
 }
 
 func Client() *KafkaClient {
@@ -53,14 +55,36 @@ func Client() *KafkaClient {
 	config.Metadata.Retry.Max = 5
 
 	// Create producer
-	producer, err := sarama.NewSyncProducer([]string{brokerURL}, config)
+	producer, err := sarama.NewAsyncProducer([]string{brokerURL}, config)
 	if err != nil {
 		logger.Log.Fatalf("Failed to create Kafka producer: %v", err)
 	}
 
-	return &KafkaClient{
+	client := &KafkaClient{
 		producer: producer,
 		topic:    topic,
+	}
+
+	client.wg.Add(2)
+	go client.handleSuccesses()
+	go client.handleErrors()
+
+	return client
+}
+
+// Goroutine pro úspěšně odeslané zprávy
+func (r *KafkaClient) handleSuccesses() {
+	defer r.wg.Done()
+	for msg := range r.producer.Successes() {
+		logger.Log.Infof("Message sent successfully to Kafka topic %s, partition: %d, offset: %d", msg.Topic, msg.Partition, msg.Offset)
+	}
+}
+
+// Goroutine pro chyby při odesílání
+func (r *KafkaClient) handleErrors() {
+	defer r.wg.Done()
+	for err := range r.producer.Errors() {
+		logger.Log.Errorf("Failed to send message to Kafka: %v", err)
 	}
 }
 
@@ -70,12 +94,11 @@ func (r *KafkaClient) SendMessage(data []byte) error {
 		Value: sarama.ByteEncoder(data),
 	}
 
-	partition, offset, err := r.producer.SendMessage(msg)
-	if err != nil {
-		logger.Log.Errorf("Failed to send message to Kafka: %v", err)
-		return err
-	}
-
-	logger.Log.Infof("Message sent to Kafka topic %s: %s, partition: %d, offset: %d", r.topic, string(data), partition, offset)
+	r.producer.Input() <- msg
 	return nil
+}
+
+func (r *KafkaClient) Close() {
+	r.producer.AsyncClose()
+	r.wg.Wait()
 }
