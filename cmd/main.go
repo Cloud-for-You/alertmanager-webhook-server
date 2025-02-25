@@ -89,11 +89,11 @@ func receiverHandler(w http.ResponseWriter, r *http.Request) {
 		var receiver receivers.Receiver
 		switch receiverType {
     case "stdout":
-        receiver = stdout.NewSTDOUTReceiver()
+        receiver = stdout.Client()
 		case "kafka":
-				receiver = kafka.NewKAFKAReceiver()
+				receiver = kafka.Client()
     default:
-	      receiver = stdout.NewSTDOUTReceiver()	
+	      receiver = stdout.Client()
     }
 
 		mainReceiver := receivers.NewMainReceiver(receiver)
@@ -104,4 +104,5 @@ func receiverHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     w.WriteHeader(http.StatusOK)
+		
 }

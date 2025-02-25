@@ -9,26 +9,26 @@ import (
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 )
 
-type KAFKAReceiver struct {
+type KafkaClient struct {
 	producer sarama.SyncProducer
 	topic    string
 }
 
-func NewKAFKAReceiver() *KAFKAReceiver {
+func Client() *KafkaClient {
 	brokerURL := os.Getenv("KAFKA_BROKER_URL")
-	clientCertPath := os.Getenv("KAFKA_CLIENT_CERT")
-	clientKeyPath := os.Getenv("KAFKA_CLIENT_KEY")
-	caCertPath := os.Getenv("KAFKA_CA_CERT")
+	clientCertFile := os.Getenv("KAFKA_CLIENT_CERT")
+	clientKeyFile := os.Getenv("KAFKA_CLIENT_KEY")
+	caCertFile := os.Getenv("KAFKA_CA_CERT")
 	topic := os.Getenv("KAFKA_TOPIC")
 
 	// Load client cert
-	clientCert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+	clientCert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
 	if err != nil {
 		logger.Log.Fatalf("Failed to load client certificate: %v", err)
 	}
 
 	// Load CA cert
-	caCert, err := os.ReadFile(caCertPath)
+	caCert, err := os.ReadFile(caCertFile)
 	if err != nil {
 		logger.Log.Fatalf("Failed to read CA certificate: %v", err)
 	}
@@ -58,13 +58,13 @@ func NewKAFKAReceiver() *KAFKAReceiver {
 		logger.Log.Fatalf("Failed to create Kafka producer: %v", err)
 	}
 
-	return &KAFKAReceiver{
+	return &KafkaClient{
 		producer: producer,
 		topic:    topic,
 	}
 }
 
-func (r *KAFKAReceiver) SendMessage(data []byte) error {
+func (r *KafkaClient) SendMessage(data []byte) error {
 	msg := &sarama.ProducerMessage{
 		Topic: r.topic,
 		Value: sarama.ByteEncoder(data),

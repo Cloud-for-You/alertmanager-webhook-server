@@ -4,13 +4,13 @@ import (
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 )
 
-type STDOUTReceiver struct{}
+type StdoutClient struct{}
 
-func NewSTDOUTReceiver() *STDOUTReceiver {
-    return &STDOUTReceiver{}
+func Client() *StdoutClient {
+    return &StdoutClient{}
 }
 
-func (r *STDOUTReceiver) SendMessage(data []byte) error {
+func (r *StdoutClient) SendMessage(data []byte) error {
 	logger.Log.Infof("%s", string(data))
   return nil
 }
