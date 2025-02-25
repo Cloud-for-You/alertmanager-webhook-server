@@ -61,7 +61,7 @@ func NewKAFKAReceiver() *KAFKAReceiver {
 	}
 }
 
-func (r *KAFKAReceiver) Producer(data []byte) error {
+func (r *KAFKAReceiver) SendMessage(data []byte) error {
 	msg := &sarama.ProducerMessage{
 		Topic: r.topic,
 		Value: sarama.ByteEncoder(data),

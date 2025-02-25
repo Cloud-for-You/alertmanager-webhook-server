@@ -10,7 +10,7 @@ func NewSTDOUTReceiver() *STDOUTReceiver {
     return &STDOUTReceiver{}
 }
 
-func (r *STDOUTReceiver) Producer(data []byte) error {
+func (r *STDOUTReceiver) SendMessage(data []byte) error {
 	logger.Log.Infof("%s", string(data))
   return nil
 }

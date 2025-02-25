@@ -3,7 +3,7 @@ package receivers
 import "fmt"
 
 type Receiver interface {
-    Producer(data []byte) error
+    SendMessage(data []byte) error
 }
 
 // Hlavní receiver, který deleguje na vybranou implementaci
@@ -21,5 +21,5 @@ func (m *MainReceiver) Receive(data []byte) error {
     if m.implementation == nil {
         return fmt.Errorf("no receiver implementation provided")
     }
-    return m.implementation.Producer(data)
+    return m.implementation.SendMessage(data)
 }
