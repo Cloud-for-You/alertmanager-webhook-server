@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.2.2...v1.3.0) (2025-02-25)
+
+
+### Features
+
+* Refactoring pojmenovani sluzeb ([c6bafe4](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/c6bafe4cb0493901618f9969f7af2b94d72ab005))
+
 ## [1.2.2](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.2.1...v1.2.2) (2025-02-25)
 
 
