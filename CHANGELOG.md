@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.3.0...v1.4.0) (2025-02-26)
+
+
+### Features
+
+* Implementace asynchronniho kafka producenta ([#8](https://github.com/Cloud-for-You/alertmanager-webhook-server/issues/8)) ([968466f](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/968466fb740b8df4063c0285424b4742c62ccad3))
+
 ## [1.3.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.2.2...v1.3.0) (2025-02-25)
 
 
