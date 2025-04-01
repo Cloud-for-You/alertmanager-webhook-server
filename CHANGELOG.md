@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.4.0...v1.4.1) (2025-04-01)
+
+
+### Bug Fixes
+
+* **stdout:** Prejmenovani packages ([516e4f9](https://github.com/Cloud-for-You/alertmanager-webhook-server/commit/516e4f93ba529d123dd669a9aabdf1a1a9227558))
+
 ## [1.4.0](https://github.com/Cloud-for-You/alertmanager-webhook-server/compare/v1.3.0...v1.4.0) (2025-02-26)
 
 
