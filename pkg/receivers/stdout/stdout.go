@@ -1,4 +1,4 @@
-package receivers
+package stdout
 
 import (
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
