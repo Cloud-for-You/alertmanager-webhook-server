@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-webhook-server
+spec:
+  template:
+    spec:
+      containers:
+      - name: alertmanager-webhook-server
+        image: quay.io/cloud-for-you/alertmanager-webhook-server:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: APP_ENV
+          value: "development"
+        - name: RECEIVER_NAME
+          value: "msteams"
