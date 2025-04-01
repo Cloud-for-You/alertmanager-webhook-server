@@ -14,6 +14,7 @@ import (
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers"
 	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/kafka"
+	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/msteams"
 	stdout "github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/stdout"
 )
 
@@ -92,6 +93,8 @@ func receiverHandler(w http.ResponseWriter, r *http.Request) {
         receiver = stdout.Client()
 		case "kafka":
 				receiver = kafka.Client()
+		case "msteams":
+		    receiver = msteams.Client()
     default:
 	      receiver = stdout.Client()
     }
