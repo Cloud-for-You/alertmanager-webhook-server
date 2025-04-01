@@ -14,7 +14,7 @@ import (
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers"
 	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/kafka"
-	stdout "github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/stdout"
+	"github.com/cloud-for-you/alertmanager-webhook-server/pkg/receivers/stdout"
 )
 
 var (
