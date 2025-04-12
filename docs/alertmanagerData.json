@@ -1,0 +1,78 @@
+{
+  "receiver": "Default",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "NodeSystemSaturation",
+        "container": "kube-rbac-proxy",
+        "endpoint": "https",
+        "instance": "tvlainfocpw03.pmb.cz",
+        "job": "node-exporter",
+        "namespace": "openshift-monitoring",
+        "openshift_io_alert_source": "platform",
+        "pod": "node-exporter-6p7ws",
+        "prometheus": "openshift-monitoring/k8s",
+        "service": "node-exporter",
+        "severity": "warning"
+      },
+      "annotations": {
+        "description": "System load per core at tvlainfocpw03.pmb.cz has been above 2 for the last 15 minutes, is currently at 3.64.\nThis might indicate this instance resources saturation and can cause it becoming unresponsive.\n",
+        "summary": "System saturated, load per core is very high."
+      },
+      "startsAt": "2025-04-02T23:34:52.932Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "https://console-openshift-console.apps.inf-tocp.pmb.cz/monitoring/graph?g0.expr=node_load1%7Bjob%3D%22node-exporter%22%7D+%2F+count+without+%28cpu%2C+mode%29+%28node_cpu_seconds_total%7Bjob%3D%22node-exporter%22%2Cmode%3D%22idle%22%7D%29+%3E+2&g0.tab=1",
+      "fingerprint": "ee372d91cbf22b33"
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "NodeSystemSaturation",
+        "container": "kube-rbac-proxy",
+        "endpoint": "https",
+        "instance": "tvlainfocpw03.pmb.cz",
+        "job": "node-exporter",
+        "namespace": "openshift-monitoring",
+        "openshift_io_alert_source": "platform",
+        "pod": "node-exporter-6p7ws",
+        "prometheus": "openshift-monitoring/k8s",
+        "service": "node-exporter",
+        "severity": "warning"
+      },
+      "annotations": {
+        "description": "System load per core at tvlainfocpw03.pmb.cz has been above 2 for the last 15 minutes, is currently at 3.64.\nThis might indicate this instance resources saturation and can cause it becoming unresponsive.\n",
+        "summary": "System saturated, load per core is very high."
+      },
+      "startsAt": "2025-04-02T23:34:52.932Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "https://console-openshift-console.apps.inf-tocp.pmb.cz/monitoring/graph?g0.expr=node_load1%7Bjob%3D%22node-exporter%22%7D+%2F+count+without+%28cpu%2C+mode%29+%28node_cpu_seconds_total%7Bjob%3D%22node-exporter%22%2Cmode%3D%22idle%22%7D%29+%3E+2&g0.tab=1",
+      "fingerprint": "ee372d91cbf22b33"
+    }
+  ],
+  "groupLabels": {
+    "namespace": "openshift-monitoring"
+  },
+  "commonLabels": {
+    "alertname": "NodeSystemSaturation",
+    "container": "kube-rbac-proxy",
+    "endpoint": "https",
+    "instance": "tvlainfocpw03.pmb.cz",
+    "job": "node-exporter",
+    "namespace": "openshift-monitoring",
+    "openshift_io_alert_source": "platform",
+    "pod": "node-exporter-6p7ws",
+    "prometheus": "openshift-monitoring/k8s",
+    "service": "node-exporter",
+    "severity": "warning"
+  },
+  "commonAnnotations": {
+    "description": "System load per core at tvlainfocpw03.pmb.cz has been above 2 for the last 15 minutes, is currently at 3.64.\nThis might indicate this instance resources saturation and can cause it becoming unresponsive.\n",
+    "summary": "System saturated, load per core is very high."
+  },
+  "externalURL": "https://console-openshift-console.apps.inf-tocp.pmb.cz/monitoring",
+  "version": "4",
+  "groupKey": "{}:{namespace=\"openshift-monitoring\"}",
+  "truncatedAlerts": 0
+}

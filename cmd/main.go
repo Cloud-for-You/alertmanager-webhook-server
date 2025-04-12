@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -69,8 +68,8 @@ func receiverHandler(w http.ResponseWriter, r *http.Request) {
     // Parsování JSON alertu do struktury Alertmanageru
     body, err := io.ReadAll(r.Body)
     if err != nil {
-        http.Error(w, "Chyba při čtení requestu", http.StatusBadRequest)
-        return
+      http.Error(w, "Chyba při čtení requestu", http.StatusBadRequest)
+      return
     }
     defer r.Body.Close() // Ensure the body is closed after reading
 
@@ -90,22 +89,22 @@ func receiverHandler(w http.ResponseWriter, r *http.Request) {
 		var receiver receivers.Receiver
 		switch receiverType {
     case "stdout":
-        receiver = stdout.Client()
+      receiver = stdout.Client()
 		case "kafka":
-				receiver = kafka.Client()
+			receiver = kafka.Client()
 		case "msteams":
-		    receiver = msteams.Client()
+		  receiver = msteams.Client(os.Getenv("MSTEAMS_WEBHOOK_URL"), nil)
     default:
-	      receiver = stdout.Client()
+	    receiver = stdout.Client()
     }
 
 		mainReceiver := receivers.NewMainReceiver(receiver)
+		
 		// Simulace příjmu dat
 		err = mainReceiver.Receive(body)
     if err != nil {
-        fmt.Println("Error:", err)
+			logger.Log.Errorf("Error: %v", err)
     }
 
     w.WriteHeader(http.StatusOK)
-		
 }
