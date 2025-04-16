@@ -9,6 +9,9 @@ Data, která jsou přijata pomocí HTTP webhooku, jsou zalogovány na stdout
 ### Kafka
 Data jsou přeposílány do Kafka topicu.
 
+### Centreon
+Data jsou do centreon posílána pomocí protokolu NRDP.
+
 ## Podporované ENV proměnné
 
 Níže je uvedena tabulka s proměnnými prostředí, které jsou vyžadovány pro jednotlivé receivery.
