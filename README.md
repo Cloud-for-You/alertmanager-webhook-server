@@ -16,15 +16,19 @@ Data jsou do centreon posílána pomocí protokolu NRDP.
 
 Níže je uvedena tabulka s proměnnými prostředí, které jsou vyžadovány pro jednotlivé receivery.
 
-| Proměnná           | Popis                                            | Default     | Receiver  |
-|--------------------|--------------------------------------------------|-------------|-----------|
-| `APP_ENV` .        | prostředí pro logování (production, development) | development |           |
-| `RECEIVER_TYPE`    | specifikace receiveru                            | stdout      |           |
-| `KAFKA_BROKER_URL` | URL Kafka brokera včetně protokolu               |             | kafka     |
-| `KAFKA_TOPIC`      | Název Kafka topicu                               |             | kafka     |
-| `KAFKA_CLIENT_CERT`| Cesta k souboru s klientským certifikátem        |             | kafka     |
-| `KAFKA_CLIENT_KEY` | Cesta k souboru s klientským klíčem              |             | kafka     |
-| `KAFKA_CA_CERT`    | Cesta k souboru s CA certifikátem                |             | kafka     |
+| Proměnná                       | Popis                                                  | Default     | Receiver  |
+|--------------------------------|--------------------------------------------------------|-------------|-----------|
+| `APP_ENV` .                    | prostředí pro logování (production, development)       | development |           |
+| `RECEIVER_TYPE`                | specifikace receiveru                                  | stdout      |           |
+| `KAFKA_BROKER_URL`             | URL Kafka brokera včetně protokolu                     |             | kafka     |
+| `KAFKA_TOPIC`                  | Název Kafka topicu                                     |             | kafka     |
+| `KAFKA_CLIENT_CERT`            | Cesta k souboru s klientským certifikátem              |             | kafka     |
+| `KAFKA_CLIENT_KEY`             | Cesta k souboru s klientským klíčem                    |             | kafka     |
+| `KAFKA_CA_CERT`                | Cesta k souboru s CA certifikátem                      |             | kafka     |
+| `CENTREON_NRDP_URL`            | URL Endpoint pro NRDP protokol                         |             | centreon  |
+| `CENTREON_NRDP_TOKEN`          | Autentizační token                                     |             | centreon  |
+| `CENTREON_MONITORING_HOSTNAME` | Hostname v centreonu, na který se budou alerty párovat |             | centreon  |
+
 
 ## Příklady hodnot proměnných prostředí
 

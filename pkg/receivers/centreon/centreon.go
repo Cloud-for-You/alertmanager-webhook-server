@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
@@ -49,9 +50,9 @@ type CheckResult struct {
 
 func Client() *CentreonClient {
 	return &CentreonClient{
-		NrdpURL: "https://centreon.example.com/nrdp/", // ← os.Getenv("CENTREON_NRDP_URL")
-		Token:   "your-nrdp-token",                    // ← os.Getenv("CENTREON_NRDP_TOKEN")
-		Hostname: "inf-tocp",                          // ← os.Getenv("CLUSTER_NAME")
+		NrdpURL: os.Getenv("CENTREON_NRDP_URL"),
+		Token:   os.Getenv("CENTREON_NRDP_TOKEN"),
+		Hostname: os.Getenv("CENTREON_MONITORING_HOSTNAME"),
 		HTTPClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
