@@ -2,6 +2,7 @@ package centreon
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
 	"io"
@@ -55,6 +56,11 @@ func Client() *CentreonClient {
 		Hostname: os.Getenv("CENTREON_MONITORING_HOSTNAME"),
 		HTTPClient: &http.Client{
 			Timeout: 5 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: os.Getenv("INSECURE_SKIP_VERIFY") == "true",
+				},
+			},
 		},
 	}
 }

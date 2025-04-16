@@ -19,6 +19,7 @@ Níže je uvedena tabulka s proměnnými prostředí, které jsou vyžadovány p
 | Proměnná                       | Popis                                                  | Default     | Receiver  |
 |--------------------------------|--------------------------------------------------------|-------------|-----------|
 | `APP_ENV` .                    | prostředí pro logování (production, development)       | development |           |
+| `INSECURE_SKIP_VERIFY`         | Umožňuje vypnout verifikaci serverového certifikátu    | false       |           |
 | `RECEIVER_TYPE`                | specifikace receiveru                                  | stdout      |           |
 | `KAFKA_BROKER_URL`             | URL Kafka brokera včetně protokolu                     |             | kafka     |
 | `KAFKA_TOPIC`                  | Název Kafka topicu                                     |             | kafka     |
