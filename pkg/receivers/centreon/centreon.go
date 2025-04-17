@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"encoding/xml"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,10 +13,10 @@ import (
 	"github.com/cloud-for-you/alertmanager-webhook-server/internal/logger"
 )
 
-type CentreonClient struct{
-	NrdpURL string
-	Token string
-	Hostname string
+type CentreonClient struct {
+	NrdpURL    string
+	Token      string
+	Hostname   string
 	HTTPClient *http.Client
 }
 
@@ -33,21 +32,6 @@ type Alert struct {
 	StartsAt    time.Time         `json:"startsAt"`
 	EndsAt      time.Time         `json:"endsAt"`
 }
-
-type NRDPRequest struct {
-	XMLName     xml.Name      `xml:"nrdp"`
-	CheckResult []CheckResult `xml:"checkresults>checkresult"`
-}
-
-type CheckResult struct {
-	Type         string `xml:"type,attr"`      // "service"
-	CheckType    string `xml:"checktype,attr"` // "1" = passive
-	Hostname     string `xml:"hostname"`
-	ServiceName  string `xml:"servicename"`
-	State        int    `xml:"state"`  // 0 = OK, 2 = CRITICAL
-	Output       string `xml:"output"` // Alert summary
-}
-
 
 func Client() *CentreonClient {
 	return &CentreonClient{
@@ -80,13 +64,10 @@ func (r *CentreonClient) SendMessage(data []byte) error {
 	var results []CheckResult
 	for _, alert := range payload.Alerts {
 		serviceName := alert.Labels["alertname"]
-		if serviceName == "" {
-			serviceName = "UnnamedAlert"
-		}
 
-		state := 2 // firing = CRITICAL
+		state := "2" // firing = CRITICAL
 		if alert.Status == "resolved" {
-			state = 0 // resolved = OK
+			state = "0" // resolved = OK
 		}
 
 		output := alert.Annotations["summary"]
@@ -98,26 +79,29 @@ func (r *CentreonClient) SendMessage(data []byte) error {
 		}
 
 		result := CheckResult{
-			Type:        "service",
-			CheckType:   "1",
+			CheckResult: struct {
+				Type string `json:"type"`
+			}{Type: "service"},
 			Hostname:    os.Getenv("CENTREON_MONITORING_HOSTNAME"),
-			ServiceName: serviceName,
+			Servicename: serviceName,
 			State:       state,
 			Output:      output,
 		}
 		results = append(results, result)
 	}
 
-	xmlPayload, err := xml.MarshalIndent(NRDPRequest{CheckResult: results}, "", "  ")
+	jsonPayload, err := json.Marshal(CheckResultsPayload{
+		CheckResults: results,
+	})
 	if err != nil {
-		logger.Log.Errorf("failed to marshal NRDP XML: %v", err)
+		logger.Log.Errorf("failed to marshal JSON payload: %v", err)
 		return nil
 	}
 
 	form := url.Values{}
 	form.Set("token", r.Token)
 	form.Set("cmd", "submitcheck")
-	form.Set("xml", string(xmlPayload))
+	form.Set("json", string(jsonPayload))
 
 	req, err := http.NewRequest("POST", r.NrdpURL, bytes.NewBufferString(form.Encode()))
 	if err != nil {
