@@ -100,7 +100,7 @@ func (r *CentreonClient) SendMessage(data []byte) error {
 		result := CheckResult{
 			Type:        "service",
 			CheckType:   "1",
-			Hostname:    r.Hostname,
+			Hostname:    os.Getenv("CENTREON_MONITORING_HOSTNAME"),
 			ServiceName: serviceName,
 			State:       state,
 			Output:      output,
